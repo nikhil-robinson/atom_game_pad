@@ -17,7 +17,6 @@
 
 // I2C + joystick read logic from atoms3joy
 
-
 #define RIGHTX 0
 #define RIGHTY 1
 #define LEFTX 2
@@ -36,7 +35,6 @@
 #define LEFT_BUTTON_ADDRESS (0x72)
 #define RIGHT_BUTTON_ADDRESS (0x73)
 
-
 uint16_t stick[4];
 uint8_t button[4];
 int16_t button_counter[4];
@@ -44,22 +42,12 @@ uint8_t button_state[4] = {0};
 uint8_t button_old_state[4] = {0};
 uint8_t buffer[4];
 
-// typedef struct __attribute__((packed, aligned(1))) {
-//   uint16_t buttons;
-//   int8_t leftXAxis;
-//   int8_t leftYAxis;
-//   int8_t rightXAxis;
-//   int8_t rightYAxis;
-// } HID_GamepadReport_Data_t;
-
-// HID_GamepadReport_Data_t _report;
-
 hid_gamepad_report_t _report = {0};
-
 
 static const char *TAG = "example";
 
-#define TUSB_DESC_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
+#define TUSB_DESC_TOTAL_LEN                                                    \
+  (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
 
 const uint8_t hid_report_descriptor[] = {
     TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(1))};
@@ -138,7 +126,8 @@ void joy_update(void) {
   for (uint8_t i = 0; i < 4; i++) {
     button_state[i] = (~read_byte_data(LEFT_STICK_BUTTON_ADDRESS + i)) & 0x01;
 
-    _report.buttons = (_report.buttons & ~((uint32_t)1 << i)) | ((uint32_t)button_state[i] << i);
+    _report.buttons = (_report.buttons & ~((uint32_t)1 << i)) |
+                      ((uint32_t)button_state[i] << i);
   }
 }
 
@@ -154,10 +143,10 @@ int map(int x, int in_min, int in_max, int out_min, int out_max) {
 static void send_joystick_report(void) {
   joy_update();
 
-  _report.x =map(stick[LEFTX], 0, 4095, -127, 127); 
-  _report.y =map(stick[LEFTY], 0, 4095, -127, 127);
-  _report.rx =map(stick[RIGHTX], 0, 4095, -127, 127); 
-  _report.ry =map(stick[RIGHTY], 0, 4095, -127, 127);
+  _report.x = map(stick[LEFTX], 0, 4095, -127, 127);
+  _report.y = map(stick[LEFTY], 0, 4095, -127, 127);
+  _report.rx = map(stick[RIGHTX], 0, 4095, -127, 127);
+  _report.ry = map(stick[RIGHTY], 0, 4095, -127, 127);
 
   tud_hid_report(1, &_report, sizeof(_report));
 }
