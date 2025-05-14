@@ -1,8 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
- * SPDX-License-Identifier: Unlicense OR CC0-1.0
- */
-
 #include "class/hid/hid_device.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
@@ -49,15 +44,18 @@ uint8_t button_state[4] = {0};
 uint8_t button_old_state[4] = {0};
 uint8_t buffer[4];
 
-typedef struct __attribute__((packed, aligned(1))) {
-  uint16_t buttons;
-  int8_t leftXAxis;
-  int8_t leftYAxis;
-  int8_t rightXAxis;
-  int8_t rightYAxis;
-} HID_GamepadReport_Data_t;
+// typedef struct __attribute__((packed, aligned(1))) {
+//   uint16_t buttons;
+//   int8_t leftXAxis;
+//   int8_t leftYAxis;
+//   int8_t rightXAxis;
+//   int8_t rightYAxis;
+// } HID_GamepadReport_Data_t;
 
-HID_GamepadReport_Data_t _report;
+// HID_GamepadReport_Data_t _report;
+
+hid_gamepad_report_t _report = {0};
+
 
 static const char *TAG = "example";
 
@@ -140,8 +138,7 @@ void joy_update(void) {
   for (uint8_t i = 0; i < 4; i++) {
     button_state[i] = (~read_byte_data(LEFT_STICK_BUTTON_ADDRESS + i)) & 0x01;
 
-    _report.buttons = (_report.buttons & ~((uint16_t)1 << i)) |
-                      ((uint16_t)button_state[i] << i);
+    _report.buttons = (_report.buttons & ~((uint32_t)1 << i)) | ((uint32_t)button_state[i] << i);
   }
 }
 
@@ -157,14 +154,10 @@ int map(int x, int in_min, int in_max, int out_min, int out_max) {
 static void send_joystick_report(void) {
   joy_update();
 
-  _report.leftXAxis =
-      map(stick[LEFTX], 0, 4095, -127, 127); //(stick[LEFTX]  >> 4) & 0xFF;
-  _report.leftYAxis =
-      map(stick[LEFTY], 0, 4095, -127, 127); //(stick[LEFTY]  >> 4) & 0xFF;
-  _report.rightXAxis =
-      map(stick[RIGHTX], 0, 4095, -127, 127); //(stick[LEFTY] >> 4) & 0xFF;
-  _report.rightYAxis =
-      map(stick[RIGHTY], 0, 4095, -127, 127); //(stick[RIGHTY] >> 4) & 0xFF;
+  _report.x =map(stick[LEFTX], 0, 4095, -127, 127); 
+  _report.y =map(stick[LEFTY], 0, 4095, -127, 127);
+  _report.rx =map(stick[RIGHTX], 0, 4095, -127, 127); 
+  _report.ry =map(stick[RIGHTY], 0, 4095, -127, 127);
 
   tud_hid_report(1, &_report, sizeof(_report));
 }
